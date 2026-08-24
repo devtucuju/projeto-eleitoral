@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: scampanha-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scampanha
+    ports:
+      - "5432:5432"
+    volumes:
+      - scampanha_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d scampanha"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  scampanha_pgdata:
+    name: scampanha_pgdata

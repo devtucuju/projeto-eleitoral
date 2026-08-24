@@ -1,0 +1,58 @@
+# Produção — Scampanha
+# Imagens do GHCR (sem build no servidor).
+# Proxy: Nginx no HOST (80/443) → app :3000 em 127.0.0.1
+#
+# Uso:
+#   export IMAGE_TAG=<sha>
+#   docker compose --env-file .env.production -f docker-compose.prod.yml up -d --pull always
+
+name: scampanha
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: scampanha_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-scampanha}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - scampanha_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-scampanha}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY}/app:${IMAGE_TAG:-latest}
+    container_name: scampanha_app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD}@db:5432/${DB_NAME:-scampanha}?schema=public
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - scampanha_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    name: scampanha_postgres_data
+
+networks:
+  scampanha_network:
+    driver: bridge

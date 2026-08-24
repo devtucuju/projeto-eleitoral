@@ -1,0 +1,131 @@
+// Schema do scampanha - O Finch da Rua
+// Banco: PostgreSQL
+// Estrutura: Apoio ao cabo eleitoral no Amapá
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Partido político (referência)
+model Partido {
+  id          String      @id @default(cuid())
+  nome        String
+  sigla       String      @unique
+  numero      Int         @unique
+  cor         String?
+  logo        String?
+  ativo       Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  candidatos  Candidato[]
+}
+
+// Candidato(a) - placeholder até definição
+model Candidato {
+  id          String     @id @default(cuid())
+  nome        String
+  apelido     String?
+  numero      Int
+  foto        String?
+  cargo       String     // "Deputado Estadual", "Vereador", etc.
+  partidoId   String
+  partido     Partido    @relation(fields: [partidoId], references: [id])
+  ativo       Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  celulas     Celula[]
+  missoes     Missao[]
+}
+
+// Célula - grupo de cabos por bairro
+model Celula {
+  id           String     @id @default(cuid())
+  nome         String     // "Zerão", "Brasil Novo", "Parque dos Buritis"
+  cidade       String     @default("Macapá")
+  candidatoId  String
+  candidato    Candidato  @relation(fields: [candidatoId], references: [id])
+  createdAt    DateTime   @default(now())
+  membros      Membro[]
+  missoes      Missao[]
+
+  @@unique([nome, candidatoId])
+}
+
+// Membro - cabo/voluntário/liderança
+model Membro {
+  id           String     @id @default(cuid())
+  nome         String
+  telefone     String?    @unique
+  apelido      String?    // ex: "Chocolate", "Bananeira", "Cabeça"
+  tipo         String     @default("cabo") // cabo, voluntario, lider
+  status       String     @default("pendente") // pendente, fechado, inativo
+  isLideranca  Boolean    @default(false)
+  referencia   String?    // Rurap, P. Meio Mundo, Amigo, etc.
+  bairro       String?
+  municipio    String     @default("Macapá")
+  celulaId     String
+  celula       Celula     @relation(fields: [celulaId], references: [id])
+  // Árvore de indicação
+  paiId        String?
+  pai          Membro?    @relation("Indicacao", fields: [paiId], references: [id])
+  filhos       Membro[]   @relation("Indicacao")
+  // Código de convite (para gerar link)
+  codigoConvite String?   @unique
+  // LGPD
+  aceitouTermos Boolean   @default(false)
+  // Stats
+  streak       Int        @default(0)
+  pontos       Int        @default(0)
+  conversas    Conversa[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+// Missão - tarefa para o dia
+model Missao {
+  id           String     @id @default(cuid())
+  titulo       String
+  descricao    String?
+  tipo         String     @default("feira") // feira, porta-a-porta, evento
+  local        String?
+  data         DateTime
+  ativa        Boolean    @default(true)
+  metaConversas Int       @default(5)
+  candidatoId  String
+  candidato    Candidato  @relation(fields: [candidatoId], references: [id])
+  celulaId     String?
+  celula       Celula?    @relation(fields: [celulaId], references: [id])
+  conversas    Conversa[]
+  createdAt    DateTime   @default(now())
+}
+
+// Conversa - registro pós-feira
+model Conversa {
+  id              String     @id @default(cuid())
+  membroId        String
+  membro          Membro     @relation(fields: [membroId], references: [id])
+  missaoId        String?
+  missao          Missao?    @relation(fields: [missaoId], references: [id])
+  nomeEleitor     String?
+  telefoneEleitor String?
+  interesse       String     @default("indeciso") // favoravel, indeciso, contrario
+  observacao      String?
+  local           String?
+  confirmada      Boolean    @default(false)
+  codigoConf      String     @unique
+  confirmadaEm    DateTime?
+  createdAt       DateTime   @default(now())
+}
+
+// Usuário do sistema (coordenação)
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  nome      String
+  role      String   @default("coordenador") // coordenador, admin
+  createdAt DateTime @default(now())
+}

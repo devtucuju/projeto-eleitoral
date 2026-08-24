@@ -1,0 +1,127 @@
+name: CI/CD - Deploy to Production
+
+# Fluxo:
+# - PR aberta/atualizada → quality (lint + type-check)
+# - PR mergeada na main → build/push GHCR + deploy
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  quality:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci --prefer-offline
+
+      - name: Gerar Prisma Client
+        run: npx prisma generate
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  build-and-push:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          echo "image_base=${REGISTRY}/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.production
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image_base }}/app:${{ github.sha }}
+            ${{ steps.meta.outputs.image_base }}/app:latest
+          build-args: |
+            NEXTAUTH_URL=${{ vars.NEXTAUTH_URL }}
+
+  deploy:
+    needs: build-and-push
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DO_HOST }}
+          username: ${{ secrets.DO_USER }}
+          key: ${{ secrets.DO_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 20m
+          script: |
+            set -e
+            cd /opt/scampanha
+
+            if [ ! -f .env.production ]; then
+              echo "ERROR: /opt/scampanha/.env.production não encontrado"
+              exit 1
+            fi
+
+            # Login no GHCR
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            # Exportar tag da imagem
+            export IMAGE_TAG=${{ github.sha }}
+
+            # Parar containers antigos
+            docker rm -f scampanha_app 2>/dev/null || true
+
+            # Pull e subir
+            docker compose --env-file .env.production -f docker-compose.prod.yml pull
+            docker compose --env-file .env.production -f docker-compose.prod.yml up -d
+
+            # Migrar banco se necessário
+            docker compose --env-file .env.production -f docker-compose.prod.yml exec -T app \
+              npx prisma migrate deploy || true
+
+            # Limpeza de imagens antigas
+            docker image prune -af --filter "until=24h" || true
+
+            # Status
+            docker compose --env-file .env.production -f docker-compose.prod.yml ps
+
+            # Health check
+            curl -sI -m 10 ${{ vars.NEXTAUTH_URL }}/api/health || true

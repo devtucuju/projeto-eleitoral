@@ -1,0 +1,50 @@
+# ============================================
+# Scampanha - Dockerfile Production
+# ============================================
+FROM node:20-alpine AS base
+
+# Instalar dependências do sistema para Prisma/PostgreSQL
+RUN apk add --no-cache openssl postgresql-client
+
+# Stage 1: Dependências
+FROM base AS deps
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci --prefer-offline
+
+# Stage 2: Build
+FROM deps AS builder
+WORKDIR /app
+
+COPY prisma ./prisma/
+RUN npx prisma generate
+
+COPY . .
+RUN npm run build
+
+# Stage 3: Produção
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copiar Prisma schema e binários
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma /app/node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client /app/node_modules/@prisma/client
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "server.js"]
