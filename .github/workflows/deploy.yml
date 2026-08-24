@@ -79,6 +79,10 @@ jobs:
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
@@ -95,17 +99,11 @@ jobs:
             fi
 
             # Login no GHCR
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "$GH_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Exportar tag da imagem
-            export IMAGE_TAG=${{ github.sha }}
-
-            # Parar containers antigos
-            docker rm -f scampanha_app 2>/dev/null || true
-
-            # Pull e subir
-            docker compose --env-file .env.production -f docker-compose.prod.yml pull
-            docker compose --env-file .env.production -f docker-compose.prod.yml up -d
+            # Pull e subir com IMAGE_TAG
+            IMAGE_TAG=$IMAGE_TAG docker compose --env-file .env.production -f docker-compose.prod.yml pull
+            IMAGE_TAG=$IMAGE_TAG docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 
             # Migrar banco se necessário
             docker compose --env-file .env.production -f docker-compose.prod.yml exec -T app \
@@ -118,4 +116,4 @@ jobs:
             docker compose --env-file .env.production -f docker-compose.prod.yml ps
 
             # Health check
-            curl -sI -m 10 ${{ vars.NEXTAUTH_URL }}/api/health || true
+            curl -sI -m 10 $NEXTAUTH_URL/api/health || true
