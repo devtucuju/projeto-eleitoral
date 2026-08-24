@@ -81,7 +81,6 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           IMAGE_TAG: ${{ github.sha }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
         with:
           host: ${{ secrets.DO_HOST }}
@@ -98,8 +97,8 @@ jobs:
               exit 1
             fi
 
-            # Login no GHCR
-            echo "$GH_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Login no GHCR (GITHUB_TOKEN é variável padrão do Actions)
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Pull e subir com IMAGE_TAG
             IMAGE_TAG=$IMAGE_TAG docker compose --env-file .env.production -f docker-compose.prod.yml pull
