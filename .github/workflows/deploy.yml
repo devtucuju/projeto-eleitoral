@@ -82,7 +82,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
           NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
@@ -98,8 +98,8 @@ jobs:
               exit 1
             fi
 
-            # Login no GHCR (GITHUB_TOKEN é variável padrão do Actions)
-            echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Login no GHCR usando PAT
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Pull e subir com IMAGE_TAG
             IMAGE_TAG=$IMAGE_TAG docker compose --env-file .env.production -f docker-compose.prod.yml pull
