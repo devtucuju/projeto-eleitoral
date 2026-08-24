@@ -4,8 +4,6 @@ name: CI/CD - Deploy to Production
 # - PR aberta/atualizada → quality (lint + type-check)
 # - PR mergeada na main → build/push GHCR + deploy
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, closed]
@@ -33,12 +31,6 @@ jobs:
 
       - name: Gerar Prisma Client
         run: npx prisma generate
-
-      - name: TypeScript check
-        run: npx tsc --noEmit
-
-      - name: ESLint
-        run: npm run lint
 
       - name: Build
         run: npm run build

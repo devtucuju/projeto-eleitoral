@@ -25,7 +25,6 @@ export async function GET(req: Request) {
       telefoneEleitor: null,
       observacao: null,
       local: null,
-      fotoUrl: null,
     },
   });
 
