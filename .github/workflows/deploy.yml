@@ -82,6 +82,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
           NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
