@@ -7,7 +7,7 @@
 set -e
 
 # Variáveis - EDITE ESTES VALORES
-GITHUB_USER="SEU_USUARIO_GITHUB"  # Troque pelo seu usuário GitHub
+GITHUB_USER="devtucuju"  # Troque pelo seu usuário GitHub
 SERVER_IP=$(curl -s ifconfig.me)   # Pega IP automaticamente
 
 echo "========================================"
