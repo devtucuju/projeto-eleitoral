@@ -109,8 +109,10 @@ model Conversa {
   membro          Membro     @relation(fields: [membroId], references: [id])
   missaoId        String?
   missao          Missao?    @relation(fields: [missaoId], references: [id])
-  nomeEleitor     String?
-  telefoneEleitor String?
+  pessoaId        String?
+  pessoa          Pessoa?    @relation(fields: [pessoaId], references: [id])
+  nomePessoa      String?
+  telefonePessoa  String?
   interesse       String     @default("indeciso") // favoravel, indeciso, contrario
   observacao      String?
   local           String?
@@ -128,4 +130,21 @@ model User {
   nome      String
   role      String   @default("coordenador") // coordenador, admin
   createdAt DateTime @default(now())
+}
+
+// Pessoa - contato cadastrado pelos cabos
+model Pessoa {
+  id              String   @id @default(cuid())
+  nome            String
+  telefone        String?
+  cpf             String?
+  numeroTitulo    String?
+  zona            String?
+  secao           String?
+  cidade          String?
+  endereco        String?
+  observacao      String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  conversas       Conversa[]
 }
