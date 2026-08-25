@@ -79,19 +79,20 @@ jobs:
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
-        env:
-          IMAGE_TAG: ${{ github.sha }}
-          NEXTAUTH_URL: ${{ vars.NEXTAUTH_URL }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         with:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USER }}
           key: ${{ secrets.DO_SSH_KEY }}
           timeout: 60s
           command_timeout: 20m
+          envs: IMAGE_TAG,NEXTAUTH_URL,GHCR_TOKEN
           script: |
             set -e
             cd /opt/scampanha
+
+            echo "GHCR_TOKEN length: ${#GHCR_TOKEN}"
+            echo "IMAGE_TAG: $IMAGE_TAG"
+            echo "NEXTAUTH_URL: $NEXTAUTH_URL"
 
             if [ ! -f .env.production ]; then
               echo "ERROR: /opt/scampanha/.env.production não encontrado"
@@ -102,8 +103,9 @@ jobs:
             echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Pull e subir com IMAGE_TAG
-            IMAGE_TAG=$IMAGE_TAG docker compose --env-file .env.production -f docker-compose.prod.yml pull
-            IMAGE_TAG=$IMAGE_TAG docker compose --env-file .env.production -f docker-compose.prod.yml up -d
+            export IMAGE_TAG
+            docker compose --env-file .env.production -f docker-compose.prod.yml pull
+            docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 
             # Migrar banco se necessário
             docker compose --env-file .env.production -f docker-compose.prod.yml exec -T app \
@@ -116,4 +118,4 @@ jobs:
             docker compose --env-file .env.production -f docker-compose.prod.yml ps
 
             # Health check
-            curl -sI -m 10 $NEXTAUTH_URL/api/health || true
+            curl -sI -m 10 "$NEXTAUTH_URL/api/health" || true
