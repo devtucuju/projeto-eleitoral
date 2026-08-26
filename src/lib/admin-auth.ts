@@ -43,7 +43,7 @@ export async function setAdminCookie(token: string) {
   const c = await cookies();
   c.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: false,
     sameSite: "lax",
     maxAge: COOKIE_MAX_AGE,
     path: "/",
