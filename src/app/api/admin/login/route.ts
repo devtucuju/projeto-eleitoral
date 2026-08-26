@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email e senha obrigatórios" }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.membro.findUnique({ where: { email } });
     if (!user) {
       return NextResponse.json({ error: "Credenciais inválidas" }, { status: 401 });
     }
@@ -27,7 +27,7 @@ export async function POST(req: Request) {
 
     const token = await signAdminToken({
       id: user.id,
-      email: user.email,
+      email: user.email ?? "",
       nome: user.nome,
       role: user.role,
     });

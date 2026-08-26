@@ -59,6 +59,9 @@ model Membro {
   id           String     @id @default(cuid())
   nome         String
   telefone     String?    @unique
+  email        String?    @unique
+  password     String
+  role         String     @default("coordenador") // coordenador, admin
   apelido      String?    // ex: "Chocolate", "Bananeira", "Cabeça"
   tipo         String     @default("cabo") // cabo, voluntario, lider
   status       String     @default("pendente") // pendente, fechado, inativo
