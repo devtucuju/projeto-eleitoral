@@ -33,7 +33,7 @@ export function PessoasClient({ pessoas, totalConversas }: { pessoas: Pessoa[]; 
   const [page, setPage] = useState(1);
 
   const cidades = useMemo(() => {
-    const set = new Set(pessoas.map((p) => p.cidade).filter(Boolean));
+    const set = new Set(pessoas.map((p) => p.cidade).filter((c): c is string => Boolean(c)));
     return Array.from(set).sort();
   }, [pessoas]);
 

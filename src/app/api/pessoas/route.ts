@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export async function GET(req: Request) {
   try {
@@ -64,7 +65,7 @@ export async function POST(req: Request) {
       });
 
       if (existente) {
-        const data: Record<string, unknown> = { nome };
+        const data: Prisma.PessoaUpdateInput = { nome };
         if (body?.cpf) data.cpf = String(body.cpf).replace(/\D/g, "");
         if (body?.numeroTitulo) data.numeroTitulo = String(body.numeroTitulo).trim();
         if (body?.zona) data.zona = String(body.zona).trim();
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const data: Record<string, unknown> = { nome };
+    const data: Prisma.PessoaCreateInput = { nome };
     if (telefone) data.telefone = telefone;
     if (body?.cpf) data.cpf = String(body.cpf).replace(/\D/g, "");
     if (body?.numeroTitulo) data.numeroTitulo = String(body.numeroTitulo).trim();
