@@ -43,7 +43,7 @@ next-env.d.ts
 *.log
 
 # Prisma
-prisma/migrations/
+# prisma/migrations/  # tracked intentionally for production deploys
 
 # IDE
 .idea/

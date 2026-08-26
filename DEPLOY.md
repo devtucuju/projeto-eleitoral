@@ -188,6 +188,14 @@ docker compose ps
 curl http://localhost:3000/api/health
 ```
 
+> **Migrations automáticas**: o container `app` agora roda `npx prisma migrate deploy` antes de iniciar o servidor. Se o banco já estiver baselinado (ex.: deploy anterior), basta subir — migrations pendentes aplicam sozinhas. Para basar manualmente:
+> ```bash
+> docker compose --env-file .env.production -f docker-compose.prod.yml exec -T app \
+>   npx prisma migrate resolve --applied 20260101000000_init
+> docker compose --env-file .env.production -f docker-compose.prod.yml exec -T app \
+>   npx prisma migrate resolve --applied 20260101000100_add_pessoa
+> ```
+
 ---
 
 ## 5. Migração do Banco de Dados
