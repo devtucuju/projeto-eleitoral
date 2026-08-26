@@ -21,8 +21,8 @@ export async function GET(req: Request) {
       createdAt: { lt: trintaDiasAtras },
     },
     data: {
-      nomeEleitor: null,
-      telefoneEleitor: null,
+      nomePessoa: null,
+      telefonePessoa: null,
       observacao: null,
       local: null,
     },

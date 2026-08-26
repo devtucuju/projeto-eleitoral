@@ -35,8 +35,8 @@ export async function POST(req: Request) {
     await prisma.conversa.updateMany({
       where: { membroId: membro.id },
       data: {
-        nomeEleitor: null,
-        telefoneEleitor: null,
+        nomePessoa: null,
+        telefonePessoa: null,
         observacao: null,
       },
     });
