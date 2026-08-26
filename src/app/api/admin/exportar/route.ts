@@ -21,17 +21,17 @@ export async function GET(req: Request) {
       },
       orderBy: { createdAt: "desc" },
     });
-    csv = "Data;Membro;Telefone Membro;Eleitor;Telefone Eleitor;Confirmada;Missao;Local\n";
+    csv = "Data;Membro;Telefone Membro;Pessoa;Telefone Pessoa;Confirmada;Missao;Local\n";
     csv += conversas.map((c) => {
       const data = c.createdAt.toISOString().slice(0, 19).replace("T", " ");
       const membro = (c.membro.apelido || c.membro.nome).replace(/[;\n]/g, " ");
       const membroTel = c.membro.telefone || "";
-      const eleitor = (c.nomeEleitor || "").replace(/[;\n]/g, " ");
-      const eleitorTel = c.telefoneEleitor || "";
+      const pessoa = (c.nomePessoa || "").replace(/[;\n]/g, " ");
+      const pessoaTel = c.telefonePessoa || "";
       const confirmada = c.confirmada ? "SIM" : "NAO";
       const missao = (c.missao?.titulo || "").replace(/[;\n]/g, " ");
       const local = (c.local || "").replace(/[;\n]/g, " ");
-      return `${data};${membro};${membroTel};${eleitor};${eleitorTel};${confirmada};${missao};${local}`;
+      return `${data};${membro};${membroTel};${pessoa};${pessoaTel};${confirmada};${missao};${local}`;
     }).join("\n");
     filename = `conversas-${new Date().toISOString().slice(0, 10)}.csv`;
   } else if (tipo === "membros") {

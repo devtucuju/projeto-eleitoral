@@ -26,8 +26,8 @@ export default function RegistrarPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nomeEleitor: nome.trim() || null,
-          telefoneEleitor: telefone.replace(/\D/g, ""),
+          nomePessoa: nome.trim() || null,
+          telefonePessoa: telefone.replace(/\D/g, ""),
         }),
       });
       if (!resp.ok) {

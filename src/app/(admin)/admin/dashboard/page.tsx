@@ -130,7 +130,7 @@ export default async function AdminDashboard() {
                   <div className={`mt-1 h-2 w-2 rounded-full ${c.confirmada ? "bg-success-500" : "bg-warning-500"}`} />
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-medium text-gray-800 dark:text-white/90">
-                      {c.nomeEleitor || "Conversa sem nome"}
+                      {c.nomePessoa || "Conversa sem nome"}
                     </div>
                     <div className="truncate text-xs text-gray-500">
                       por {c.membro.nome}
