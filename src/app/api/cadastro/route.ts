@@ -57,6 +57,8 @@ export async function POST(req: Request) {
         paiId,
         pontos: 0,
         streak: 0,
+        // Placeholder - senha definida depois
+        password: "$2a$10$placeholder",
       },
     });
 

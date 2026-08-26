@@ -312,9 +312,11 @@ async function main() {
         municipio,
         celulaId,
         codigoConvite: telefone.slice(-8),
-        aceitouTermos: true, // membros do seed já aceitaram
+        aceitouTermos: true,
         pontos: pontosIniciais,
         streak: streakInicial,
+        // Placeholder - usar bcrypt.hashSync('senha', 10) em produção
+        password: "$2a$10$placeholder.hash.for.seed.data",
       },
     });
     count++;
