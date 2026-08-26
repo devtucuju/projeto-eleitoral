@@ -106,13 +106,15 @@ jobs:
             # Login no GHCR usando PAT
             echo "$GHCR_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Pull e subir com IMAGE_TAG
+            # Pull da nova imagem
             docker compose --env-file .env.production -f docker-compose.prod.yml pull
-            docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 
-            # Migrar banco se necessário
-            docker compose --env-file .env.production -f docker-compose.prod.yml exec -T app \
-              npx prisma migrate deploy || true
+            # Migrar banco ANTES de subir o app (precisa da imagem com node_modules completo)
+            docker compose --env-file .env.production -f docker-compose.prod.yml run --rm -T app \
+              node node_modules/.bin/prisma migrate deploy || true
+
+            # Subir o app
+            docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 
             # Limpeza de imagens antigas
             docker image prune -af --filter "until=24h" || true
