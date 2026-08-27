@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
   { href: "/admin/pessoas", label: "Pessoas", icon: "🗳️" },
@@ -18,6 +18,12 @@ const navItems = [
 export function AdminSidebar({ adminNome, pendentes }: { adminNome: string; pendentes?: number }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.push("/admin/login");
+  }
 
   return (
     <>
@@ -52,20 +58,20 @@ export function AdminSidebar({ adminNome, pendentes }: { adminNome: string; pend
             onClick={(e) => e.stopPropagation()}
             className="absolute left-0 top-0 h-full w-72 bg-white shadow-xl dark:bg-gray-900"
           >
-            <SidebarContent pathname={pathname} adminNome={adminNome} onNavigate={() => setOpen(false)} />
+            <SidebarContent pathname={pathname} adminNome={adminNome} onNavigate={() => setOpen(false)} onLogout={handleLogout} />
           </aside>
         </div>
       )}
 
       {/* Desktop sidebar (md+) */}
       <aside className="sticky top-0 hidden h-screen w-60 flex-shrink-0 border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 md:flex md:flex-col">
-        <SidebarContent pathname={pathname} adminNome={adminNome} />
+        <SidebarContent pathname={pathname} adminNome={adminNome} onLogout={handleLogout} />
       </aside>
     </>
   );
 }
 
-function SidebarContent({ pathname, adminNome, onNavigate }: { pathname: string; adminNome: string; onNavigate?: () => void }) {
+function SidebarContent({ pathname, adminNome, onNavigate, onLogout }: { pathname: string; adminNome: string; onNavigate?: () => void; onLogout: () => void }) {
   return (
     <>
       <div className="border-b border-gray-200 px-5 py-5 dark:border-gray-800">
@@ -88,6 +94,7 @@ function SidebarContent({ pathname, adminNome, onNavigate }: { pathname: string;
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               onClick={onNavigate}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 active
@@ -105,12 +112,13 @@ function SidebarContent({ pathname, adminNome, onNavigate }: { pathname: string;
       <div className="border-t border-gray-200 p-4 dark:border-gray-800">
         <div className="text-[11px] uppercase tracking-wider text-gray-400">Logado como</div>
         <div className="mb-3 text-sm font-medium text-gray-800 dark:text-white/90">{adminNome}</div>
-        <Link
-          href="/api/admin/logout"
+        <button
+          type="button"
+          onClick={onLogout}
           className="block w-full rounded-md border border-gray-200 px-3 py-2 text-center text-xs font-medium text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-white/5"
         >
           Sair
-        </Link>
+        </button>
         <Link
           href="/celula/auth"
           className="mt-2 block text-center text-xs text-brand-500 hover:text-brand-600"
