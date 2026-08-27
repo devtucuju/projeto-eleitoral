@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/admin/pessoas", label: "Pessoas", icon: "🗳️" },
@@ -18,11 +18,10 @@ const navItems = [
 export function AdminSidebar({ adminNome, pendentes }: { adminNome: string; pendentes?: number }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const router = useRouter();
 
   async function handleLogout() {
     await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin/login");
+    window.location.href = "/admin/login";
   }
 
   return (
